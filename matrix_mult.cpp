@@ -11,13 +11,18 @@
 #include <string.h>
 #include <time.h>
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
+#define BINARY_FILE "OpenCL/matrix_mult_Kernel.cl.gpu_64.bc"
 #else
 #include <CL/cl.h>
+#define BINARY_FILE "matrix_mult_Kernel.bin"
 #endif
+
+void buildWithBinary( cl_program &mProgram, cl_context &mContext, const cl_device_id* const mDevice );
 
 int main() {
 
@@ -122,6 +127,19 @@ int main() {
         return 0;
     }
     
+    //Load program
+    //build program with binary
+    //please use program "m2c" amd do not rename matrix_mult_Kernel.cl
+    buildWithBinary(program, context, &devices[0]);
+    if (program == 0) {
+        std::cerr << "Can't load or build program\n";
+        clReleaseMemObject(a_buffer);
+        clReleaseMemObject(b_buffer);
+        clReleaseMemObject(c_buffer);
+        clReleaseCommandQueue(queue);
+        clReleaseContext(context);
+        return 0;
+    }
     
     
 
@@ -150,4 +168,36 @@ int main() {
    clReleaseProgram(program);
    clReleaseContext(context);
    return 0;
+}
+
+
+void buildWithBinary( cl_program &mProgram, cl_context &mContext, const cl_device_id* const mDevice ){
+    
+    using std::cout;
+    using std::endl;
+    
+    int err_code;
+    size_t file_size;
+    unsigned char* bin_content;
+    std::fstream file;
+    
+    file.open(BINARY_FILE, std::ios::in );
+    file.seekg(0, file.end);
+    file_size = file.tellg();
+    file.seekg(0, file.beg);
+    
+    bin_content = new unsigned char[ file_size ];
+    file.read( (char*) bin_content, file_size );
+    file.close();
+    
+    mProgram = clCreateProgramWithBinary( mContext, 1, mDevice, &file_size, (const unsigned char**) &bin_content, NULL, &err_code );
+    if( err_code != CL_SUCCESS ){
+        std::cout<<"Error building program"<<std::endl;
+    }
+    if( err_code == CL_INVALID_CONTEXT ){
+        cout<<file_size<<endl;
+    }
+    
+    delete [] bin_content;
+    clBuildProgram( mProgram, 1, &mDevice[0], NULL, NULL, NULL );
 }
