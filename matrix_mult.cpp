@@ -141,6 +141,20 @@ int main() {
         return 0;
     }
     
+    //Inital kernel
+    mult_kernel = clCreateKernel(program, "matrix_mult", 0);
+    if (mult_kernel == 0) {
+        std::cerr << "Can't load kernel\n";
+        clReleaseProgram(program);
+        clReleaseMemObject(a_buffer);
+        clReleaseMemObject(b_buffer);
+        clReleaseMemObject(c_buffer);
+        clReleaseCommandQueue(queue);
+        clReleaseContext(context);
+        return 0;
+    }
+    
+    
     
 
    /* Check result */
