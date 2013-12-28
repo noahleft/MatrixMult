@@ -154,7 +154,15 @@ int main() {
         return 0;
     }
     
-    
+    //Run kernel
+    clSetKernelArg(mult_kernel, 0, sizeof(cl_mem), &a_buffer);
+    clSetKernelArg(mult_kernel, 1, sizeof(cl_mem), &b_buffer);
+    clSetKernelArg(mult_kernel, 2, sizeof(cl_mem), &c_buffer);
+    global_size=1;
+    err = clEnqueueNDRangeKernel(queue, mult_kernel, 1, 0, &global_size, 0, 0, 0, 0);
+    if (err == CL_SUCCESS) {
+        err = clEnqueueReadBuffer(queue, c_buffer, CL_TRUE, 0, sizeof(float) * MATRIX_DIM * MATRIX_DIM, &c_mat[0], 0, 0, 0);
+    }
     
 
    /* Check result */
