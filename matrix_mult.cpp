@@ -57,8 +57,9 @@ int main() {
       }
    }
 
-
-
+    //a_mat,b_mat store the data. i.e A*B=C
+    //check_mat is the result calculate by CPU code
+    //c_mat is the result calculate by OpenCL code
 
 
 
