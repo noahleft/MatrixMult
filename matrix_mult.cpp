@@ -108,6 +108,19 @@ int main() {
         return 0;
     }
     
+    //Alloc memory
+    a_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float) * MATRIX_DIM * MATRIX_DIM, &a_mat[0], NULL);
+    b_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float) * MATRIX_DIM * MATRIX_DIM, &b_mat[0], NULL);
+    c_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * MATRIX_DIM * MATRIX_DIM, NULL, NULL);
+    if (a_buffer==0 || b_buffer==0 || c_buffer==0) {
+        std::cerr << "Can't create OpenCL buffer\n";
+        clReleaseMemObject(a_buffer);
+        clReleaseMemObject(b_buffer);
+        clReleaseMemObject(c_buffer);
+        clReleaseCommandQueue(queue);
+        clReleaseContext(context);
+        return 0;
+    }
     
     
     
