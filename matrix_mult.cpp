@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <iostream>
+#include <vector>
 
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
@@ -61,12 +63,21 @@ int main() {
     //check_mat is the result calculate by CPU code
     //c_mat is the result calculate by OpenCL code
 
+    //Get # of platforms at first
+    cl_uint num;
+    err = clGetPlatformIDs(0, 0, &num);
+    if (err != CL_SUCCESS) {
+        std::cerr << "Unable to get platforms\n";
+        return 0;
+    }
 
-
-
-
-
-
+    //Get id of platforms
+    std::vector<cl_platform_id> platforms(num);
+    err = clGetPlatformIDs(num, &platforms[0], &num);
+    if (err != CL_SUCCESS) {
+        std::cerr << "Unable to get paltform ID\n";
+        return 0;
+    }
 
 
 
