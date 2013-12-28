@@ -100,7 +100,17 @@ int main() {
     clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
     std::cout << "Device: " << devname.c_str() << "\n";
     
-
+    //Create command queue
+    queue = clCreateCommandQueue(context, devices[0], 0, 0);
+    if (queue == 0) {
+        std::cerr << "Can't create command queue\n";
+        clReleaseContext(context);
+        return 0;
+    }
+    
+    
+    
+    
 
    /* Check result */
    check = 1;
