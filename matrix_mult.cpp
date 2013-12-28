@@ -11,7 +11,7 @@
 #include <string.h>
 #include <time.h>
 
-#ifdef MAC
+#ifdef __APPLE__
 #include <OpenCL/cl.h>
 #else
 #include <CL/cl.h>
