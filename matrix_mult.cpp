@@ -27,7 +27,7 @@ void buildWithBinary( cl_program &mProgram, cl_context &mContext, const cl_devic
 int main() {
 
    /* Host/device data structures */
-   cl_device_id device;
+   cl_device_id *device;
    cl_context context;
    cl_command_queue queue;
    cl_program program;
@@ -83,30 +83,26 @@ int main() {
         std::cerr << "Unable to get paltform ID\n";
         return 0;
     }
-
-    //Create OpenCL context
-    cl_context_properties prop[] = { CL_CONTEXT_PLATFORM, reinterpret_cast<cl_context_properties>(platforms[0]), 0 };
-    context = clCreateContextFromType(prop, CL_DEVICE_TYPE_DEFAULT, NULL, NULL, NULL);
-    if (context == 0) {
-        std::cerr << "Can't create OpenCL context\n";
-        return 0;
-    }
-
-    //Get devices list
-    size_t cb;
-    clGetContextInfo(context, CL_CONTEXT_DEVICES, 0, NULL, &cb);
-    std::vector<cl_device_id> devices( cb/ sizeof(cl_device_id));
-    clGetContextInfo(context, CL_CONTEXT_DEVICES, cb, &devices[0], 0);
     
+    //Get Device list
+    clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, 0, NULL, &num);
+    device = new cl_device_id[num];
+    clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, num, device, NULL);
+    
+    //Create OpenCL context
+    context = clCreateContext(NULL, 1, device, NULL, NULL, &err);
+    
+
     //Get devices info
-    clGetDeviceInfo(devices[0], CL_DEVICE_NAME, 0, NULL, &cb);
+    size_t cb;
+    clGetDeviceInfo(*device, CL_DEVICE_NAME, 0, NULL, &cb);
     std::string devname;
     devname.resize(cb);
-    clGetDeviceInfo(devices[0], CL_DEVICE_NAME, cb, &devname[0], 0);
+    clGetDeviceInfo(*device, CL_DEVICE_NAME, cb, &devname[0], 0);
     std::cout << "Device: " << devname.c_str() << "\n";
     
     //Create command queue
-    queue = clCreateCommandQueue(context, devices[0], 0, 0);
+    queue = clCreateCommandQueue(context, device[0], 0, 0);
     if (queue == 0) {
         std::cerr << "Can't create command queue\n";
         clReleaseContext(context);
@@ -130,7 +126,7 @@ int main() {
     //Load program
     //build program with binary
     //please use program "m2c" amd do not rename matrix_mult_Kernel.cl
-    buildWithBinary(program, context, &devices[0]);
+    buildWithBinary(program, context, &device[0]);
     if (program == 0) {
         std::cerr << "Can't load or build program\n";
         clReleaseMemObject(a_buffer);
@@ -185,7 +181,7 @@ int main() {
    clReleaseMemObject(b_buffer);
    clReleaseMemObject(c_buffer);
    clReleaseKernel(mult_kernel);
-   clReleaseKernel(transpose_kernel);
+//   clReleaseKernel(transpose_kernel);
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
    clReleaseContext(context);
