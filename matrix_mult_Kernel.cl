@@ -1,8 +1,12 @@
 //__kernel void matrix_mult(__global float4 *a_mat, __global float4 *b_mat, __global float *c_mat) {
 __kernel void matrix_mult(__global float *a_mat, __global float *b_mat, __global float *c_mat) {
 
-    for(int i=0;i<128;i++) {
-        for(int j=0;j<128;j++) {
+    int idx = get_global_id(0);
+    int bias_i=32*(idx/4);
+    int bias_j=32*(idx%4);
+    
+    for(int x=0,i=bias_i;x<32;x++,i++) {
+        for(int y=0,j=bias_j;y<32;y++,j++) {
             int index=i*128+j;
             
             float tmp=0;
