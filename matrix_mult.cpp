@@ -164,7 +164,7 @@ int main() {
     
     //Run matrix multiply kernel
     clSetKernelArg(mult_kernel, 0, sizeof(cl_mem), &a_buffer);
-    clSetKernelArg(mult_kernel, 1, sizeof(cl_mem), &b_buffer);
+    clSetKernelArg(mult_kernel, 1, sizeof(cl_mem), &t_buffer);
     clSetKernelArg(mult_kernel, 2, sizeof(cl_mem), &c_buffer);
     global_size=1;
     err = clEnqueueNDRangeKernel(queue, mult_kernel, 1, 0, &global_size, 0, 0, 0, 0);

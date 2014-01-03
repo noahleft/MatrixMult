@@ -1,5 +1,5 @@
 //__kernel void matrix_mult(__global float4 *a_mat, __global float4 *b_mat, __global float *c_mat) {
-__kernel void matrix_mult(__constant float *a_mat, __constant float *b_mat, __global float *c_mat) {
+__kernel void matrix_mult(__global float *a_mat, __global float *b_mat, __global float *c_mat) {
 
     for(int i=0;i<128;i++) {
         for(int j=0;j<128;j++) {
@@ -8,7 +8,7 @@ __kernel void matrix_mult(__constant float *a_mat, __constant float *b_mat, __gl
             float tmp=0;
             for(int k=0;k<128;k++) {
                 int index_a=i*128+k;
-                int index_b=k*128+j;
+                int index_b=j*128+k;
                 tmp+=a_mat[index_a]*b_mat[index_b];
             }
             c_mat[index]=tmp;
@@ -19,7 +19,7 @@ __kernel void matrix_mult(__constant float *a_mat, __constant float *b_mat, __gl
 
 
 
-__kernel void transpose(__constant float *mat,__global float *t_mat) {
+__kernel void transpose(__global float *mat,__global float *t_mat) {
     
     int idx = get_global_id(0);
     int x = idx/4;
