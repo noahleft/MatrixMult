@@ -41,6 +41,7 @@ int main() {
    float a_mat[MATRIX_DIM][MATRIX_DIM], b_mat[MATRIX_DIM][MATRIX_DIM], 
          c_mat[MATRIX_DIM][MATRIX_DIM], check_mat[MATRIX_DIM][MATRIX_DIM];
    cl_mem a_buffer, b_buffer, c_buffer;
+   cl_mem t_buffer;
    
    /* Initialize A, B, and check matrices */
    srand((unsigned int)time(0));
@@ -112,12 +113,14 @@ int main() {
     //Alloc memory
     a_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float) * MATRIX_DIM * MATRIX_DIM, &a_mat[0], NULL);
     b_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(cl_float) * MATRIX_DIM * MATRIX_DIM, &b_mat[0], NULL);
+    t_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_float) * MATRIX_DIM * MATRIX_DIM, NULL, NULL);
     c_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * MATRIX_DIM * MATRIX_DIM, NULL, NULL);
-    if (a_buffer==0 || b_buffer==0 || c_buffer==0) {
+    if (a_buffer==0 || b_buffer==0 || t_buffer==0 || c_buffer==0) {
         std::cerr << "Can't create OpenCL buffer\n";
         clReleaseMemObject(a_buffer);
         clReleaseMemObject(b_buffer);
         clReleaseMemObject(c_buffer);
+        clReleaseMemObject(t_buffer);
         clReleaseCommandQueue(queue);
         clReleaseContext(context);
         return 0;
@@ -132,6 +135,7 @@ int main() {
         clReleaseMemObject(a_buffer);
         clReleaseMemObject(b_buffer);
         clReleaseMemObject(c_buffer);
+        clReleaseMemObject(t_buffer);
         clReleaseCommandQueue(queue);
         clReleaseContext(context);
         return 0;
@@ -139,18 +143,26 @@ int main() {
     
     //Inital kernel
     mult_kernel = clCreateKernel(program, "matrix_mult", 0);
-    if (mult_kernel == 0) {
+    transpose_kernel = clCreateKernel(program, "transpose", 0);
+    if (mult_kernel == 0 || transpose_kernel == 0) {
         std::cerr << "Can't load kernel\n";
         clReleaseProgram(program);
         clReleaseMemObject(a_buffer);
         clReleaseMemObject(b_buffer);
         clReleaseMemObject(c_buffer);
+        clReleaseMemObject(t_buffer);
         clReleaseCommandQueue(queue);
         clReleaseContext(context);
         return 0;
     }
     
-    //Run kernel
+    //Run transpose kernel
+    clSetKernelArg(transpose_kernel, 0, sizeof(cl_mem), &b_buffer);
+    clSetKernelArg(transpose_kernel, 1, sizeof(cl_mem), &t_buffer);
+    global_size=16;
+    err = clEnqueueNDRangeKernel(queue, transpose_kernel, 1, 0, &global_size, 0, 0, 0, 0);
+    
+    //Run matrix multiply kernel
     clSetKernelArg(mult_kernel, 0, sizeof(cl_mem), &a_buffer);
     clSetKernelArg(mult_kernel, 1, sizeof(cl_mem), &b_buffer);
     clSetKernelArg(mult_kernel, 2, sizeof(cl_mem), &c_buffer);
@@ -159,7 +171,6 @@ int main() {
     if (err == CL_SUCCESS) {
         err = clEnqueueReadBuffer(queue, c_buffer, CL_TRUE, 0, sizeof(float) * MATRIX_DIM * MATRIX_DIM, &c_mat[0], 0, 0, 0);
     }
-    
 
    /* Check result */
    check = 1;
@@ -180,8 +191,9 @@ int main() {
    clReleaseMemObject(a_buffer);
    clReleaseMemObject(b_buffer);
    clReleaseMemObject(c_buffer);
+   clReleaseMemObject(t_buffer);
    clReleaseKernel(mult_kernel);
-//   clReleaseKernel(transpose_kernel);
+   clReleaseKernel(transpose_kernel);
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
    clReleaseContext(context);
