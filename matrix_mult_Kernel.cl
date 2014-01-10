@@ -7,18 +7,21 @@ __kernel void matrix_mult(__global float *a_mat, __global float *b_mat, __global
     int bias_i=get_global_id(0)<<4;
     int bias_j=get_global_id(1)<<5;
     
-    __global float* target_address=c_mat;
+    __global float* target_address=c_mat+(bias_i<<7)+bias_j;
     
-    for(int x=0,i=bias_i;x<16;x++,i++) {
-        for(int y=0,j=bias_j;y<32;y++,j++) {
-            target_address=c_mat+(i<<7)+j;
+    for(int x=0,index_a=bias_i<<7 ; x<16 ; x++,index_a+=128) {
+        
+        for(int y=0,index_b=bias_j<<7 ; y<32 ; y++) {
             
             float tmp=0;
-            for(int k=0,index_a=i<<7,index_b=j<<7;k<128;k++,index_a++,index_b++) {
-                tmp+=a_mat[index_a]*b_mat[index_b];
+            for(int k=0;k<128;k++,index_b++) {
+                tmp+=a_mat[index_a+k] * b_mat[index_b];
             }
-            *(target_address)=tmp;
+            
+            *(target_address+y)=tmp;
         }
+        
+        target_address+=128;
     }
 }
 
