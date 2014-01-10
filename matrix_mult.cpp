@@ -25,14 +25,14 @@
 void buildWithBinary( cl_program &mProgram, cl_context &mContext, const cl_device_id* const mDevice );
 
 int main() {
-
+    
    /* Host/device data structures */
    cl_device_id *device;
    cl_context context;
    cl_command_queue queue;
    cl_program program;
    cl_kernel transpose_kernel, mult_kernel;
-   size_t global_size;
+   size_t global_size[2];
    cl_ulong mem_size;
    cl_int i, j, k, err, check;
 
@@ -159,15 +159,17 @@ int main() {
     //Run transpose kernel
     clSetKernelArg(transpose_kernel, 0, sizeof(cl_mem), &b_buffer);
     clSetKernelArg(transpose_kernel, 1, sizeof(cl_mem), &t_buffer);
-    global_size=16;
-    err = clEnqueueNDRangeKernel(queue, transpose_kernel, 1, 0, &global_size, 0, 0, 0, 0);
+    global_size[0]=4;
+    global_size[1]=4;
+    err = clEnqueueNDRangeKernel(queue, transpose_kernel, 2, 0, global_size, 0, 0, 0, 0);
     
     //Run matrix multiply kernel
     clSetKernelArg(mult_kernel, 0, sizeof(cl_mem), &a_buffer);
     clSetKernelArg(mult_kernel, 1, sizeof(cl_mem), &t_buffer);
     clSetKernelArg(mult_kernel, 2, sizeof(cl_mem), &c_buffer);
-    global_size=16;
-    err = clEnqueueNDRangeKernel(queue, mult_kernel, 1, 0, &global_size, 0, 0, 0, 0);
+    global_size[0]=8;
+    global_size[1]=4;
+    err = clEnqueueNDRangeKernel(queue, mult_kernel, 2, 0, global_size, 0, 0, 0, 0);
     if (err == CL_SUCCESS) {
         err = clEnqueueReadBuffer(queue, c_buffer, CL_TRUE, 0, sizeof(float) * MATRIX_DIM * MATRIX_DIM, &c_mat[0], 0, 0, 0);
     }
